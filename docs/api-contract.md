@@ -40,14 +40,14 @@ type ApiError = {
 
 ### `GET /api/products`
 
-| Query      | Type                                                                     | Default    | Notes                                         |
-| ---------- | ------------------------------------------------------------------------ | ---------- | --------------------------------------------- |
-| `search`   | string                                                                   | `''`       | case-insensitive match on name + category     |
-| `category` | `keyboards` \| `ducks` \| `coffee` \| `stickers` \| `all`                | `all`      | unknown values fall back to `all`             |
-| `inStock`  | `true` \| `false`                                                        | `false`    | drops `stock <= 0`                            |
-| `sort`     | `featured` \| `price-asc` \| `price-desc` \| `rating-desc` \| `name-asc` | `featured` | invalid values fall back                      |
-| `page`     | integer ≥ 1                                                              | `1`        |                                               |
-| `pageSize` | integer 1–5000                                                           | `24`       | **extension**; the browse grid asks for 5,000 |
+| Query      | Type                                                                     | Default    | Notes                                                |
+| ---------- | ------------------------------------------------------------------------ | ---------- | ---------------------------------------------------- |
+| `search`   | string                                                                   | `''`       | case-insensitive match on name + category            |
+| `category` | `keyboards` \| `ducks` \| `coffee` \| `stickers` \| `all`                | `all`      | unknown values fall back to `all`                    |
+| `inStock`  | `true` \| `false`                                                        | `false`    | drops `stock <= 0`                                   |
+| `sort`     | `featured` \| `price-asc` \| `price-desc` \| `rating-desc` \| `name-asc` | `featured` | invalid values fall back                             |
+| `page`     | integer ≥ 1                                                              | `1`        |                                                      |
+| `pageSize` | integer 1–5000                                                           | `24`       | **extension**; the browse page asks for 24, 48 or 96 |
 
 **200**
 
@@ -141,8 +141,12 @@ Every error can be produced without editing code:
 
 - **500 on the list** — Bug lab → “List → 500 error”, or `?` any search after enabling it.
 - **404 on details** — visit `/products/nope`.
-- **400 on login** — submit an invalid email or a password under 6 characters.
-- **401 on login** — wrong password. **401 on any protected call** — sign out in another tab.
+- **400 on login / checkout** — the forms validate before sending, so the same field copy appears
+  without a round trip; the server's `VALIDATION_FAILED` bodies are asserted directly in
+  [`src/api/mockServer.test.ts`](../src/api/mockServer.test.ts).
+- **401 on login** — wrong password. **401 on a protected call** — sign in, open the bug lab, press
+  **“Session → 401 at checkout”**, then place the order: the session is cleared once, the guarded
+  route sends you to `/login?next=…`, and the notice explains why.
 - **409 on checkout** — put the last units of an item in the cart, open the bug lab and press
   **“Sell out cart item → 409”** (it lowers that product's real shelf stock below your quantity), then
   place the order. The banner names the item and links back to the cart.

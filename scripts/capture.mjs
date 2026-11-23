@@ -27,6 +27,14 @@ page.on('pageerror', (error) => errors.push(String(error)));
 await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 await shoot(page, '01-home');
 
+// The pagination bar lives under the first page of products.
+await page.locator('.pagination').scrollIntoViewIfNeeded();
+await shoot(page, '01b-pagination');
+
+// Page two of a filtered view: the URL carries the whole state.
+await page.goto(`${BASE}/?category=coffee&page=2`, { waitUntil: 'networkidle' });
+await shoot(page, '01c-page-2');
+
 // Open a product that is actually in stock: take a card whose Add button is enabled.
 const addButtons = page.getByRole('button', { name: /^Add to cart/ });
 const card = addButtons.first().locator('xpath=ancestor::article');
@@ -34,7 +42,10 @@ await card.getByRole('link').first().click();
 await page.waitForLoadState('networkidle');
 await shoot(page, '02-detail');
 
-await page.locator('.detail-buy').getByRole('button', { name: /^Add to cart/ }).click();
+await page
+  .locator('.detail-buy')
+  .getByRole('button', { name: /^Add to cart/ })
+  .click();
 await page.locator('header').getByRole('link', { name: /^Cart/ }).click();
 await page.waitForLoadState('networkidle');
 await shoot(page, '03-cart');
@@ -58,6 +69,10 @@ await page.goto(`${BASE}/?search=coffee&inStock=true&sort=price-desc`, {
 });
 await shoot(page, '07-filtered');
 
+// A full page of 96 products exercises the virtualized path.
+await page.goto(`${BASE}/?pageSize=96`, { waitUntil: 'networkidle' });
+await shoot(page, '07b-page-size-96');
+
 // Mobile.
 const mobile = await browser.newContext({
   viewport: { width: 390, height: 844 },
@@ -68,14 +83,10 @@ const mpage = await mobile.newPage();
 mpage.on('pageerror', (error) => errors.push(String(error)));
 await mpage.goto(`${BASE}/`, { waitUntil: 'networkidle' });
 await shoot(mpage, '08-mobile-home');
+await mpage.locator('.pagination').scrollIntoViewIfNeeded();
+await shoot(mpage, '08b-mobile-pagination');
 await mpage.goto(`${BASE}/cart`, { waitUntil: 'networkidle' });
 await shoot(mpage, '09-mobile-cart');
-
-// Wide, tall view of the virtualized shelf after a scroll.
-await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
-await page.mouse.wheel(0, 5200);
-await page.waitForTimeout(900);
-await shoot(page, '10-scrolled');
 
 console.log('console errors:', errors.length ? errors : 'none');
 await browser.close();

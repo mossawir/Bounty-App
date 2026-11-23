@@ -260,6 +260,33 @@
   color: var(--ink);
 }
 
+.filters-count {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.per-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.per-page .select {
+  width: auto;
+  padding: 5px 8px;
+  font-size: 12px;
+  line-height: 1.2;
+  border-width: 1.5px;
+  border-radius: 8px;
+}
+
 /* ==========================================================================
    Product detail
    ========================================================================== */

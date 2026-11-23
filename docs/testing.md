@@ -1,6 +1,6 @@
 # Testing
 
-78 tests in 15 files, all behaviour-level, run with `npm test` (Vitest + Testing Library + jsdom).
+96 tests in 17 files, all behaviour-level, run with `npm test` (Vitest + Testing Library + jsdom).
 
 ## What is covered
 
@@ -8,17 +8,19 @@
 | ------------------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/lib/format.test.ts`                    | 9     | Cents → dollars formatting, filter/sort/pagination of the catalogue query, stable “featured” order.                                                               |
 | `src/features/cart/cartSlice.test.ts`       | 11    | Add/merge, stock clamp, sold-out no-op, quantity zero removes, derived count/subtotal, the cart signature that scopes idempotency.                                |
-| `src/features/products/filters.test.ts`     | 5     | URL parsing, hostile values, defaults omitted, round-trip (refresh/copy-link/Back), active filter count.                                                          |
+| `src/features/products/filters.test.ts`     | 7     | URL parsing of filters _and_ paging, hostile values, only offered page sizes, defaults omitted, round-trip, active filter count excluding page.                   |
+| `src/components/Pagination.test.tsx`        | 7     | Range copy, `aria-current`, disabled prev/next at the bounds, page-window ellipses, empty total hides the nav.                                                    |
 | `src/features/products/searchRace.test.tsx` | 2     | Out-of-order responses: the latest query wins and stale results never render.                                                                                     |
 | `src/hooks/storage-and-debounce.test.tsx`   | 5     | Debounce timing and cancellation; `localStorage` write-through, cross-tab sync, corrupt JSON fallback.                                                            |
 | `src/api/mockServer.test.ts`                | 12    | The contract: list shape, 404 body, 500 trigger, login 400/401/200, `/me` 401, order 401/400/409/201, idempotent replay, order scoping.                           |
 | `src/api/client.test.ts`                    | 3     | Transport boundary: responses are copies, the mock DB stays mutable after the cache freezes data, failures normalise to `AppError`.                               |
 | `src/lib/remoteState.test.ts`               | 6     | Request-state adapter: error and loading win over a stale payload, so a failed request can never render the previous answer.                                      |
-| `src/pages/HomePage.test.tsx`               | 2     | A failed filtered request shows a retryable error instead of the old shelf; the empty state offers a way out.                                                      |
+| `src/pages/HomePage.test.tsx`               | 8     | Failed filter request shows a retryable error instead of the old shelf; one page loads at a time; page changes and page-size changes; filters reset to page 1.    |
 | `src/app/persist.test.ts`                   | 2     | The cart snapshot is throttled, then flushed on `pagehide`; a pending write lands after the window.                                                               |
+| `src/app/session.test.ts`                   | 3     | Any endpoint's 401 clears the session once and sets the notice; other failures and the login 401 leave it alone.                                                  |
 | `src/app/caching.test.tsx`                  | 2     | Revisiting a product uses the cache; placing an order invalidates the product tag and refetches stock.                                                            |
 | `src/components/ProductCard.test.tsx`       | 3     | Price rendering, link target, add callback, sold-out disabled state.                                                                                              |
-| `src/components/FilterBar.test.tsx`         | 7     | Result count announcement, category chip, debounce (one call per burst), switch semantics, clear-button state, and clearing never resurrecting a stale search.      |
+| `src/components/FilterBar.test.tsx`         | 7     | Result count announcement, category chip, debounce (one call per burst), switch semantics, clear-button state, and clearing never resurrecting a stale search.    |
 | `src/pages/LoginPage.test.tsx`              | 4     | Empty submit blocks + focuses the first field, wrong credentials copy, successful sign-in stores the session, double submit creates one session.                  |
 | `src/pages/CheckoutPage.test.tsx`           | 5     | Order success clears the cart, 409 names the item and keeps the cart, 500-after-commit retry reuses the key, double submit = one order, contact validation focus. |
 
@@ -82,3 +84,10 @@ was a dead end. Fixed by letting only a keystroke push the draft into the URL (`
 **3. The last add-to-cart could be lost.** Writes are throttled by 250 ms, so an immediate reload or tab
 close dropped the pending snapshot and the cart came back short. Fixed by flushing on `pagehide` and on
 `visibilitychange → hidden`; pinned by `src/app/persist.test.ts`.
+
+**4. Pagination exposed a one-column grid.** Every list before pagination had more than 60 items, so it
+always took the virtualized path, which sets its column count in JavaScript. The first paginated page
+(24 items) took the plain `<ul>` path — and `.product-grid` had no `grid-template-columns`, so the shelf
+rendered one giant card per row. Unit tests passed because jsdom does not do layout. Fixed in
+`src/styles/components.css` (`repeat(auto-fill, minmax(224px, 1fr))`, 150 px on phones); the screenshot
+script is what caught it. This is the clearest argument in the repo for the browser smoke test.

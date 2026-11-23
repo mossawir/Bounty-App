@@ -68,6 +68,34 @@ A 409 must name the item that ran out. The login/checkout forms must not double-
   paints after React re-renders — two clicks in one tick would otherwise send two requests. A test
   fires two `submit` events in a single tick to prove it.
 
+## Use 4 — Pagination after review feedback
+
+This one started as human feedback, not an AI idea: the home page loaded all 5,000 products and made
+an enormous scroll. The prompt was specific — “add proper product pagination, stop loading everything”.
+
+**Prompt (paraphrased):** “The home page renders all 5,000 products in one long scroll. Add pagination
+(24/page, with a page-size choice), keep page state in the URL, reset to page 1 when filters change,
+and keep the grid accessible and keyboard-friendly.”
+
+**Kept:**
+
+- The page model in the URL: `page` and `pageSize` parsed/validated alongside the existing filters,
+  defaults omitted, round-trip tested.
+- The page-window algorithm (first, last, neighbours, ellipses) and its `aria-current` semantics.
+- The page transition behaviour: scroll the shelf into view and move focus to its heading.
+
+**Changed:**
+
+- The first version carried the previous total across _any_ argument change so the count would not
+  blink. That reintroduced the stale-count bug the repo already had a test for: after a failed
+  filter request the panel still claimed “5,000 products after filtering”. I scoped the carried total
+  to the filter signature and let error/loading own the count, then merged with the existing
+  regression test.
+- Pagination put 24 items through the non-virtualized grid path for the first time — and it rendered
+  one card per row, because only the virtualized path set a column count. The browser screenshot
+  caught it; fixed with `grid-template-columns` (plus a 150 px phone breakpoint). It is now the fourth
+  “browser found it” bug in `testing.md`.
+
 ## The AI mistake I caught
 
 **Symptom:** every unit and integration test passed, but placing an order in a real browser failed

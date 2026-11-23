@@ -2,7 +2,8 @@
 
 A small store for developer gear — rubber ducks, mechanical keyboards, coffee and stickers — built
 for the Week 1 Bug Bounty Board brief. React + TypeScript, a 5,000-item mock API, Redux Toolkit for
-cart and session, a virtualized grid, live stock, and 78 tests.
+cart and session, a paginated catalogue (24/48/96 per page) with window virtualization for large
+pages, live stock, and 96 tests.
 
 ![The Bug Bazaar home page](docs/images/home.png)
 
@@ -30,7 +31,7 @@ button).
 | `npm run typecheck`  | `tsc -b` with both projects                                                      |
 | `npm run lint`       | ESLint (type-aware)                                                              |
 | `npm run format`     | Prettier write                                                                   |
-| `npm test`           | Vitest run (78 tests)                                                            |
+| `npm test`           | Vitest run (96 tests)                                                            |
 | `npm run test:watch` | Vitest watch                                                                     |
 | `npm run smoke`      | Playwright drive-through of the purchase flow + screenshots (needs local Chrome) |
 | `npm run measure`    | Renders the shelf and prints DOM/time numbers used in `docs/performance.md`      |
@@ -49,21 +50,30 @@ All optional; see [`.env.example`](.env.example).
 
 ## What is in the box
 
-| Route           | Screen       | Notes                                                                          |
-| --------------- | ------------ | ------------------------------------------------------------------------------ |
-| `/`             | Catalogue    | search, category, in-stock, sort, result count, clear; filters live in the URL |
-| `/products/:id` | Product      | live stock, quantity cap, related items, back-to-top                           |
-| `/cart`         | Cart         | quantities clamped to stock, persisted across reloads                          |
-| `/checkout`     | Checkout     | protected; contact validation; 400/409/500 handling; idempotent retry          |
-| `/orders/:id`   | Confirmation | protected; status timeline                                                     |
-| `/login`        | Sign in      | `?next=` return path, field errors, no double submit                           |
-| `/account`      | Account      | session details, sign out                                                      |
-| `*`             | Not found    |                                                                                |
+| Route           | Screen       | Notes                                                                               |
+| --------------- | ------------ | ----------------------------------------------------------------------------------- |
+| `/`             | Catalogue    | search, category, in-stock, sort, result count, clear, pagination; state in the URL |
+| `/products/:id` | Product      | live stock, quantity cap, related items, back-to-top                                |
+| `/cart`         | Cart         | quantities clamped to stock, persisted across reloads                               |
+| `/checkout`     | Checkout     | protected; contact validation; 400/409/500 handling; idempotent retry               |
+| `/orders/:id`   | Confirmation | protected; status timeline                                                          |
+| `/login`        | Sign in      | `?next=` return path, field errors, no double submit                                |
+| `/account`      | Account      | session details, sign out                                                           |
+| `*`             | Not found    |                                                                                     |
+
+### Pagination
+
+The catalogue loads **24 products per page** by default (48 or 96 from the per-page control), so the
+home page is a short page rather than a 5,000-item scroll. `page` and `pageSize` live in the URL
+(`?category=coffee&page=2`), any filter change resets to page 1, and the grid still virtualizes at 96
+per page.
+
+![Pagination controls under the product grid](docs/images/pagination.png)
 
 The **bug lab** (bottom-left, dev only) can force each state: a 500 on the list, a 404 on a product,
-401 on login, a 409 at checkout (by selling out the item in your cart), 500 after an order commits,
-slow network, empty results, out-of-order search, and a socket drop. That is how every error state is
-demonstrable without touching code.
+401 on login, a 401 that clears the session at checkout, a 409 at checkout (by selling out the item in
+your cart), 500 after an order commits, slow network, empty results, out-of-order search, and a socket
+drop. That is how every error state is demonstrable without touching code.
 
 ### Live stock
 
@@ -78,7 +88,7 @@ merges overrides at render so a refetch never loses a tick.
 src/
   api/        client (only I/O) + error normalisation
   app/        RTK Query, store factory, persistence, lazy routes
-  components/ presentational: card, virtualized grid, states, header, toasts
+  components/ presentational: card, paginated grid, states, header, toasts
   features/   products (URL filters), cart, auth, realtime, checkout validation
   hooks/      debounce, storage, back-to-top, stock feed, document title
   lib/        cents formatting, logger, error→copy, derived product data
@@ -104,39 +114,39 @@ More detail, including the data-flow diagram and the three patterns, in
 
 Every numbered task from the brief, and where to find the work.
 
-| ID   | Task                                                    | Where                                                                                                 |
-| ---- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| D1-1 | Setup, formatting, linting, README                      | `package.json`, `tsconfig*.json`, `eslint.config.js`, `.prettierrc`, this file                        |
-| D1-2 | API contract + mock, 5,000 products, every error        | [`docs/api-contract.md`](docs/api-contract.md), `src/mocks/`, `src/api/client.ts`                     |
-| D1-3 | TypeScript strict, typed contract, no impossible states | `src/types/domain.ts`, `src/lib/remoteState.ts`, `tsconfig.app.json`                                  |
-| D1-4 | One data layer                                          | `src/api/client.ts`, `src/app/api.ts`                                                                 |
-| D2-1 | Product list + details                                  | `src/components/ProductCard.tsx`, `src/components/ProductGrid.tsx`, `src/pages/ProductDetailPage.tsx` |
-| D2-2 | Filters in the URL                                      | `src/features/products/`, `src/components/FilterBar.tsx`                                              |
-| D2-3 | Loading / empty / error / success                       | `src/components/StateViews.tsx`, `src/pages/*`                                                        |
-| D2-4 | Effect cleanup + Back to Top                            | `src/hooks/useBackToTop.ts`, `src/components/BackToTop.tsx`, detail page                              |
-| D2-5 | Custom hooks                                            | `src/hooks/`                                                                                          |
-| D2-6 | Race conditions                                         | RTK Query per-argument keys + abort; test in `src/features/products/searchRace.test.tsx`              |
-| D3-1 | Redux Toolkit, derived cart values                      | `src/features/cart/cartSlice.ts`, `src/components/Header.tsx`                                         |
-| D3-2 | Cart, stock caps, 409, idempotency                      | `src/pages/CartPage.tsx`, `src/pages/CheckoutPage.tsx`, [`docs/orders.md`](docs/orders.md)            |
-| D3-3 | Auth, guards, 401, redirect back                        | `src/features/auth/`, `src/pages/LoginPage.tsx`, [`docs/auth.md`](docs/auth.md)                       |
-| D3-4 | Backend errors → UI                                     | `src/api/errors.ts`, `src/components/StateViews.tsx`, `src/pages/NotFoundPage.tsx`                    |
-| D3-5 | Caching                                                 | `src/app/api.ts` (`keepUnusedDataFor`, tags)                                                          |
-| D4-1 | Accessibility                                           | [`docs/accessibility.md`](docs/accessibility.md)                                                      |
-| D4-2 | Performance measurement                                 | [`docs/performance.md`](docs/performance.md), `scripts/measure.mjs`                                   |
-| D4-3 | Memoization / virtualization                            | `src/components/ProductGrid.tsx`, `docs/performance.md`                                               |
-| D4-4 | Live stock                                              | `src/realtime/stockSocket.ts`, `src/hooks/useStockFeed.ts`, `src/features/realtime/`                  |
-| D4-5 | Tests                                                   | [`docs/testing.md`](docs/testing.md), `src/**/*.test.ts(x)`                                           |
-| D4-6 | CI                                                      | [`.github/workflows/ci.yml`](.github/workflows/ci.yml)                                                |
-| D4-7 | Monitoring                                              | `src/lib/logger.ts`, `src/components/ErrorBoundary.tsx`, [`docs/monitoring.md`](docs/monitoring.md)   |
-| D5-1 | Architecture                                            | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)                                                        |
-| D5-2 | Design patterns                                         | `docs/ARCHITECTURE.md` → Patterns                                                                     |
-| D5-3 | Queues / order flow                                     | [`docs/orders.md`](docs/orders.md)                                                                    |
-| D5-4 | Vocabulary                                              | [`docs/glossary.md`](docs/glossary.md)                                                                |
-| D5-5 | Architecture review                                     | [`docs/reviews/architecture-review.md`](docs/reviews/architecture-review.md)                          |
-| D5-6 | Code review                                             | [`docs/reviews/code-review.md`](docs/reviews/code-review.md)                                          |
-| D5-7 | AI notes                                                | [`docs/ai-notes.md`](docs/ai-notes.md)                                                                |
-| D5-8 | Assessment                                              | [`docs/reflection.md`](docs/reflection.md)                                                            |
-| D5-9 | Submission / walkthrough                                | [`docs/walkthrough.md`](docs/walkthrough.md), CI, this file                                           |
+| ID   | Task                                                    | Where                                                                                                                                  |
+| ---- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| D1-1 | Setup, formatting, linting, README                      | `package.json`, `tsconfig*.json`, `eslint.config.js`, `.prettierrc`, this file                                                         |
+| D1-2 | API contract + mock, 5,000 products, every error        | [`docs/api-contract.md`](docs/api-contract.md), `src/mocks/`, `src/api/client.ts`                                                      |
+| D1-3 | TypeScript strict, typed contract, no impossible states | `src/types/domain.ts`, `src/lib/remoteState.ts`, `tsconfig.app.json`                                                                   |
+| D1-4 | One data layer                                          | `src/api/client.ts`, `src/app/api.ts`                                                                                                  |
+| D2-1 | Product list + details, pagination                      | `src/components/ProductCard.tsx`, `src/components/ProductGrid.tsx`, `src/components/Pagination.tsx`, `src/pages/ProductDetailPage.tsx` |
+| D2-2 | Filters + paging in the URL                             | `src/features/products/`, `src/components/FilterBar.tsx`                                                                               |
+| D2-3 | Loading / empty / error / success                       | `src/components/StateViews.tsx`, `src/pages/*`                                                                                         |
+| D2-4 | Effect cleanup + Back to Top                            | `src/hooks/useBackToTop.ts`, `src/components/BackToTop.tsx`, detail page                                                               |
+| D2-5 | Custom hooks                                            | `src/hooks/`                                                                                                                           |
+| D2-6 | Race conditions                                         | RTK Query per-argument keys + abort; test in `src/features/products/searchRace.test.tsx`                                               |
+| D3-1 | Redux Toolkit, derived cart values                      | `src/features/cart/cartSlice.ts`, `src/components/Header.tsx`                                                                          |
+| D3-2 | Cart, stock caps, 409, idempotency                      | `src/pages/CartPage.tsx`, `src/pages/CheckoutPage.tsx`, [`docs/orders.md`](docs/orders.md)                                             |
+| D3-3 | Auth, guards, 401, redirect back                        | `src/features/auth/`, `src/pages/LoginPage.tsx`, [`docs/auth.md`](docs/auth.md)                                                        |
+| D3-4 | Backend errors → UI                                     | `src/api/errors.ts`, `src/components/StateViews.tsx`, `src/pages/NotFoundPage.tsx`                                                     |
+| D3-5 | Caching                                                 | `src/app/api.ts` (`keepUnusedDataFor`, tags)                                                                                           |
+| D4-1 | Accessibility                                           | [`docs/accessibility.md`](docs/accessibility.md)                                                                                       |
+| D4-2 | Performance measurement                                 | [`docs/performance.md`](docs/performance.md), `scripts/measure.mjs`                                                                    |
+| D4-3 | Memoization / virtualization / pagination               | `src/components/ProductGrid.tsx`, `src/pages/HomePage.tsx`, `docs/performance.md`                                                      |
+| D4-4 | Live stock                                              | `src/realtime/stockSocket.ts`, `src/hooks/useStockFeed.ts`, `src/features/realtime/`                                                   |
+| D4-5 | Tests                                                   | [`docs/testing.md`](docs/testing.md), `src/**/*.test.ts(x)`                                                                            |
+| D4-6 | CI                                                      | [`.github/workflows/ci.yml`](.github/workflows/ci.yml)                                                                                 |
+| D4-7 | Monitoring                                              | `src/lib/logger.ts`, `src/components/ErrorBoundary.tsx`, [`docs/monitoring.md`](docs/monitoring.md)                                    |
+| D5-1 | Architecture                                            | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)                                                                                         |
+| D5-2 | Design patterns                                         | `docs/ARCHITECTURE.md` → Patterns                                                                                                      |
+| D5-3 | Queues / order flow                                     | [`docs/orders.md`](docs/orders.md)                                                                                                     |
+| D5-4 | Vocabulary                                              | [`docs/glossary.md`](docs/glossary.md)                                                                                                 |
+| D5-5 | Architecture review                                     | [`docs/reviews/architecture-review.md`](docs/reviews/architecture-review.md)                                                           |
+| D5-6 | Code review                                             | [`docs/reviews/code-review.md`](docs/reviews/code-review.md)                                                                           |
+| D5-7 | AI notes                                                | [`docs/ai-notes.md`](docs/ai-notes.md)                                                                                                 |
+| D5-8 | Assessment                                              | [`docs/reflection.md`](docs/reflection.md)                                                                                             |
+| D5-9 | Submission / walkthrough                                | [`docs/walkthrough.md`](docs/walkthrough.md), CI, this file                                                                            |
 
 Supporting docs: [decisions](docs/decisions.md) (what was chosen, what was not, why) and
 [testing](docs/testing.md).
@@ -144,7 +154,7 @@ Supporting docs: [decisions](docs/decisions.md) (what was chosen, what was not, 
 ## Testing and CI
 
 ```bash
-npm test        # 78 tests, ~9 s
+npm test        # 96 tests, ~9 s
 npm run lint && npm run typecheck && npm run build
 ```
 

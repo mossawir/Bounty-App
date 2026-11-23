@@ -47,6 +47,10 @@ Two real issues were found and fixed during the audit, rather than suppressed:
   of …”), filter chips with `aria-pressed`, the in-stock control with `role="switch"` and
   `aria-checked`.
 - Back-to-Top is a real button, removed from the tab order while hidden.
+- Pagination is a `nav[aria-label="Product pagination"]`: previous/next are labelled buttons, each
+  page is a button with `aria-label="Page N"` and `aria-current="page"` on the current one. Changing
+  page scrolls the shelf into view and moves focus to its heading, so keyboard users land at the top
+  of the new results instead of in the footer.
 - Route changes move focus to `#main` (which has `tabIndex={-1}`) and announce the new title via a
   visually hidden `role="status"` region (`RouteAnnouncer`).
 
@@ -61,7 +65,9 @@ Two real issues were found and fixed during the audit, rather than suppressed:
 
 **Live regions**
 
-- The result count is a polite live region (“Showing 993 products after filtering”).
+- The result count is a polite live region (“993 products after filtering”).
+- Pagination announces “Page 2 of 209” and the visible range (“Showing 25–48 of 5,000 products”), so
+  a page change is not silent.
 - Toasts are `role="status"` / `aria-live="polite"`.
 - The socket status chip is polite; stock changes themselves are not announced per tick (a tick every
   ~2 s would be unusable). The product page has a polite stock line instead.
@@ -75,10 +81,10 @@ Two real issues were found and fixed during the audit, rather than suppressed:
 
 ## Known limitations
 
-1. **Virtualized rows.** Above 60 products, off-screen cards are not in the DOM. A screen reader sees
-   the visible rows, and the list does not claim a total item count via `aria-setsize`. The 60-item
-   threshold means search results and filtered views are fully exposed; browsing all 5,000 is not.
-   This is the main accessibility debt, listed in the architecture review and the reflection.
+1. **Virtualized rows at 96 per page.** The default page (24) and every filtered result under 60 items
+   are fully in the DOM. At the 96 option the grid virtualizes, so off-screen cards are not in the DOM
+   and the list does not claim a total item count via `aria-setsize`. The 60-item threshold means the
+   problem is opt-in, not the default; it remains the main accessibility debt at that page size.
 2. **Focus during a live tick.** If a focused card's stock hits zero, the Add button becomes disabled
    while focused; the browser keeps focus, but a screen reader may announce a changed control. Rare,
    not handled explicitly.

@@ -24,7 +24,9 @@ describe('FilterBar', () => {
       />,
     );
 
-    expect(screen.getByText(/Showing/)).toHaveTextContent('Showing 5,000 products');
+    expect(screen.getByRole('region', { name: 'Search and filter products' })).toHaveTextContent(
+      '5,000 products on the shelves',
+    );
     expect(screen.getByRole('button', { name: 'All gear' })).toHaveAttribute(
       'aria-pressed',
       'true',

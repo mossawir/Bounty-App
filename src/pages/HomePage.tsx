@@ -1,14 +1,15 @@
-import { useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { addItem } from '@/features/cart/cartSlice';
 import { selectStockOverrides } from '@/features/realtime/realtimeSlice';
 import { useGetProductsQuery } from '@/app/api';
 import { FilterBar } from '@/components/FilterBar';
 import { ProductGrid } from '@/components/ProductGrid';
+import { Pagination } from '@/components/Pagination';
 import { SkeletonGrid, EmptyState, ErrorState } from '@/components/StateViews';
 import { useToast } from '@/components/toastContext';
 import { useProductFilters } from '@/features/products/useProductFilters';
+import { pageCountFor } from '@/features/products/filters';
 import { applyStockOverrides } from '@/lib/products';
 import { toRemoteState } from '@/lib/remoteState';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -16,25 +17,63 @@ import { formatCents, formatCount } from '@/lib/format';
 import { SparkIcon } from '@/components/icons';
 import type { Product } from '@/types/domain';
 
-/** One request for the whole filtered set; the grid virtualizes it. */
-const PAGE_SIZE = 5000;
-
 export function HomePage() {
   useDocumentTitle('Shop');
   const dispatch = useAppDispatch();
   const toast = useToast();
   const { filters, update, clear, isFiltered } = useProductFilters();
   const overrides = useAppSelector(selectStockOverrides);
+  const shelfRef = useRef<HTMLDivElement>(null);
 
-  const query = useGetProductsQuery({
-    search: filters.search,
-    category: filters.category,
-    inStock: filters.inStock,
-    sort: filters.sort,
-    pageSize: PAGE_SIZE,
-  });
-
+  const query = useGetProductsQuery(filters);
   const state = toRemoteState(query);
+
+  /** Identifies "the same shelf": page changes keep the count, filter changes do not. */
+  const filterSignature = `${filters.search}|${filters.category}|${filters.inStock}|${filters.sort}`;
+  const successTotal = state.status === 'success' ? state.data.total : undefined;
+
+  // Carry the total across page changes so the count and the pager do not blink out,
+  // but never reuse it for a different filter — or after an error, where a stale
+  // number would claim the old shelf is still the answer.
+  const [carried, setCarried] = useState<{ signature: string; total: number }>();
+  useEffect(() => {
+    if (successTotal === undefined) return;
+    setCarried({ signature: filterSignature, total: successTotal });
+  }, [successTotal, filterSignature]);
+
+  const carriedTotal = carried?.signature === filterSignature ? carried.total : undefined;
+  const total =
+    state.status === 'success'
+      ? state.data.total
+      : state.status === 'loading'
+        ? carriedTotal
+        : undefined;
+
+  const pageCount = pageCountFor(total ?? 0, filters.pageSize);
+
+  // A filter change can shrink the result set below the current page.
+  useEffect(() => {
+    if (state.status !== 'success') return;
+    if (filters.page > pageCount) {
+      update({ page: pageCount }, { replace: true });
+    }
+  }, [state.status, filters.page, pageCount, update]);
+
+  // Page changes are navigations: bring the shelf back into view and move focus
+  // to its heading so keyboard and screen-reader users land in the new results.
+  const lastPage = useRef(filters.page);
+  useEffect(() => {
+    if (lastPage.current === filters.page) return;
+    lastPage.current = filters.page;
+
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    shelfRef.current?.scrollIntoView?.({
+      behavior: reduceMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+    document.getElementById('products-heading')?.focus({ preventScroll: true });
+  }, [filters.page]);
+
   const rawItems = query.data?.items;
   const products = useMemo(
     () => applyStockOverrides(rawItems ?? [], overrides),
@@ -101,15 +140,22 @@ export function HomePage() {
         onChange={update}
         onClear={clear}
         isFiltered={isFiltered}
-        total={state.status === 'success' ? state.data.total : undefined}
-        isLoading={state.status === 'loading' || query.isFetching}
+        total={total}
+        isLoading={state.status === 'loading' && total === undefined}
       />
 
-      <section className="shelf" aria-labelledby="products-heading" aria-busy={query.isFetching}>
-        <h2 className="visually-hidden" id="products-heading">
+      <section
+        className="shelf"
+        ref={shelfRef}
+        aria-labelledby="products-heading"
+        aria-busy={query.isFetching}
+      >
+        <h2 className="visually-hidden" id="products-heading" tabIndex={-1}>
           Products
         </h2>
-        {state.status === 'loading' ? <SkeletonGrid count={8} /> : null}
+        {state.status === 'loading' ? (
+          <SkeletonGrid count={Math.min(filters.pageSize, 12)} />
+        ) : null}
 
         {state.status === 'error' ? (
           <ErrorState
@@ -139,14 +185,16 @@ export function HomePage() {
         ) : null}
 
         {state.status === 'success' && products.length > 0 ? (
-          <>
-            <ProductGrid products={products} onAdd={onAdd} />
-            <p className="muted" style={{ marginTop: 18, fontSize: 12.5 }}>
-              Showing all {formatCount(products.length)} matches. Rendered with windowed
-              virtualization — scroll and the list keeps up. <Link to="/cart">Check the cart</Link>{' '}
-              when you are done.
-            </p>
-          </>
+          <ProductGrid products={products} onAdd={onAdd} />
+        ) : null}
+
+        {total !== undefined && total > 0 ? (
+          <Pagination
+            page={Math.min(filters.page, pageCount)}
+            pageSize={filters.pageSize}
+            total={total}
+            onChange={(page) => update({ page })}
+          />
         ) : null}
       </section>
     </div>

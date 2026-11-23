@@ -3,7 +3,12 @@ import { SearchIcon } from '@/components/icons';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { CATEGORIES, SORT_OPTIONS, type SortOption } from '@/types/domain';
 import { CATEGORY_META, formatCount, pluralize } from '@/lib/format';
-import { activeFilterCount, type ProductFilters } from '@/features/products/filters';
+import {
+  activeFilterCount,
+  PAGE_SIZES,
+  type PageSize,
+  type ProductFilters,
+} from '@/features/products/filters';
 
 const SORT_LABELS: Record<SortOption, string> = {
   featured: 'Featured',
@@ -148,18 +153,36 @@ export function FilterBar({
           ) : null}
         </div>
 
-        <p aria-live="polite" aria-atomic="true">
-          {isLoading ? (
-            'Counting stock…'
-          ) : total === undefined ? (
-            'Stock count unavailable'
-          ) : (
-            <>
-              Showing <strong>{formatCount(total)}</strong> {pluralize(total, 'product')}
-              {isFiltered ? ' after filtering' : ''}
-            </>
-          )}
-        </p>
+        <div className="filters-count">
+          <label className="per-page" htmlFor="page-size">
+            Per page
+            <select
+              id="page-size"
+              className="select"
+              value={filters.pageSize}
+              onChange={(event) => onChange({ pageSize: Number(event.target.value) as PageSize })}
+            >
+              {PAGE_SIZES.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <p aria-live="polite" aria-atomic="true">
+            {isLoading ? (
+              'Counting stock…'
+            ) : total === undefined ? (
+              'Stock count unavailable'
+            ) : (
+              <>
+                <strong>{formatCount(total)}</strong> {pluralize(total, 'product')}
+                {isFiltered ? ' after filtering' : ' on the shelves'}
+              </>
+            )}
+          </p>
+        </div>
       </div>
     </section>
   );

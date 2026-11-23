@@ -93,13 +93,13 @@ success`), which the page switches on. There is no `isLoading && error` state to
 
 ## Where each kind of state lives
 
-| State               | Owner           | Example                                                             | Why there                                                                                |
-| ------------------- | --------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **Server**          | RTK Query cache | product list, product, order, `/me`                                 | It is not ours. Cache + tags + abort come free; refetching is explicit.                  |
-| **Client / global** | Redux slices    | cart lines, token + user, live stock overrides, socket status       | Needed by distant components (header badge, cart, checkout) and must survive navigation. |
-| **Client / local**  | `useState`      | search draft, quantity on a detail page, form fields, bug-lab panel | Only one component cares. Putting it in Redux would add actions nobody else calls.       |
-| **URL**             | search params   | `search`, `category`, `inStock`, `sort`, `?next=`                   | Shareable, refresh-safe, and the Back button is a feature rather than a bug.             |
-| **Persistent**      | `localStorage`  | cart, session                                                       | Survives a reload; the trade-off is documented in [`auth.md`](./auth.md).                |
+| State               | Owner           | Example                                                               | Why there                                                                                |
+| ------------------- | --------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Server**          | RTK Query cache | product list, product, order, `/me`                                   | It is not ours. Cache + tags + abort come free; refetching is explicit.                  |
+| **Client / global** | Redux slices    | cart lines, token + user, live stock overrides, socket status         | Needed by distant components (header badge, cart, checkout) and must survive navigation. |
+| **Client / local**  | `useState`      | search draft, quantity on a detail page, form fields, bug-lab panel   | Only one component cares. Putting it in Redux would add actions nobody else calls.       |
+| **URL**             | search params   | `search`, `category`, `inStock`, `sort`, `page`, `pageSize`, `?next=` | Shareable, refresh-safe, and the Back button is a feature rather than a bug.             |
+| **Persistent**      | `localStorage`  | cart, session                                                         | Survives a reload; the trade-off is documented in [`auth.md`](./auth.md).                |
 
 Rules that follow from the table:
 
@@ -108,6 +108,8 @@ Rules that follow from the table:
   slice and the grid merges them at render. A refetch therefore cannot erase a live update.
 - Filters are read from the URL by `useProductFilters`; no component keeps a second copy except the
   input's draft, which is deliberately local while you type.
+- Paging is URL state too. `HomePage` asks the API for `page` + `pageSize`, and the only pages that
+  exist in memory are the 24–96 products of the current page (plus anything the cache already holds).
 
 ## Patterns
 
@@ -149,11 +151,11 @@ Three adapters, all one-directional and all tested:
 
 ### Pattern inventory
 
-| Pattern | Where it is used | Why there | What it costs |
-| --- | --- | --- | --- |
-| Container / presentational | `pages/HomePage.tsx` (container) → `components/ProductGrid.tsx` → `components/ProductCard.tsx` (presentational). Same split in `pages/CartPage.tsx` → `components/QuantityStepper.tsx`. | The card needs to be memoizable and testable without a store; the page owns fetching, dispatch and toasts. | One extra prop (`onAdd`) to thread through the grid; the grid must not grow fetching responsibilities. |
-| Custom hooks | `features/products/useProductFilters.ts`, `hooks/useDebouncedValue.ts`, `hooks/useLocalStorageState.ts`, `hooks/useBackToTop.ts`, `hooks/useStockFeed.ts`, `hooks/useDocumentTitle.ts` | Browser APIs and URL history are stateful and easy to leak. Each hook owns one subscription and its cleanup, so components stay declarative. | Hooks hide control flow: a reader must open the hook to see when the listener is added. Mitigated by one-hook-one-file and tests. |
-| Adapter | `api/errors.ts` (`normalizeError`), `lib/remoteState.ts` (`toRemoteState`), `realtime/stockSocket.ts` (socket facade) | Each converts a foreign shape (HTTP, RTK Query flags, socket events) into the one shape the UI already understands. | An extra layer in stack traces; worth it because error and state copy live in one place. |
+| Pattern                    | Where it is used                                                                                                                                                                        | Why there                                                                                                                                    | What it costs                                                                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Container / presentational | `pages/HomePage.tsx` (container) → `components/ProductGrid.tsx` → `components/ProductCard.tsx` (presentational). Same split in `pages/CartPage.tsx` → `components/QuantityStepper.tsx`. | The card needs to be memoizable and testable without a store; the page owns fetching, dispatch and toasts.                                   | One extra prop (`onAdd`) to thread through the grid; the grid must not grow fetching responsibilities.                            |
+| Custom hooks               | `features/products/useProductFilters.ts`, `hooks/useDebouncedValue.ts`, `hooks/useLocalStorageState.ts`, `hooks/useBackToTop.ts`, `hooks/useStockFeed.ts`, `hooks/useDocumentTitle.ts`  | Browser APIs and URL history are stateful and easy to leak. Each hook owns one subscription and its cleanup, so components stay declarative. | Hooks hide control flow: a reader must open the hook to see when the listener is added. Mitigated by one-hook-one-file and tests. |
+| Adapter                    | `api/errors.ts` (`normalizeError`), `lib/remoteState.ts` (`toRemoteState`), `realtime/stockSocket.ts` (socket facade)                                                                   | Each converts a foreign shape (HTTP, RTK Query flags, socket events) into the one shape the UI already understands.                          | An extra layer in stack traces; worth it because error and state copy live in one place.                                          |
 
 ## Error and loading model
 

@@ -20,6 +20,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    // Only this project's tests: a stray copy of the repo elsewhere in the
+    // workspace must not double-run the suite.
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
     setupFiles: ['./src/test/setup.ts'],
     css: false,
     restoreMocks: true,

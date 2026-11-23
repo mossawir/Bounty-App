@@ -11,13 +11,14 @@ API contract; every choice on top of it is in `docs/decisions.md`.”
 
 ## 0:30 — Browse and filter (2 min)
 
-1. Home. Point at the count: “5,000 products, one request, window-virtualized — the DOM holds ~20
-   cards.”
+1. Home. Point at the pager: “5,000 products, 24 per page — the request is 3.6 kB, the page is 27k px
+   tall, and page 2 is one click away.”
 2. Type `thock`, click **Keyboards**, toggle **In stock only**, change the sort. Point at the URL:
-   “Filters live in the query string, so refresh, copy-link and Back all work.”
-3. Press Back. The previous filters return.
+   “Filters and page live in the query string, so refresh, copy-link and Back all work.”
+3. Press Back. The previous filters return. Click **Page 2**, then change a filter: “It resets to
+   page 1 — staying on page 7 of a two-page result is the classic bug.”
 4. Search `zzzzz` → empty state with **Clear filters**. Point at the live region announcing the count.
-5. Scroll fast: “Rows mount and unmount; the scrollbar height is the full 475,000 px.”
+5. Set **Per page** to 96: “At 96 the grid virtualizes; at 24 every card is in the DOM.”
 
 ## 2:30 — Product, live stock, cleanup (1.5 min)
 
@@ -39,7 +40,9 @@ API contract; every choice on top of it is in `docs/decisions.md`.”
 2. Submit empty → errors announced, focus on the first invalid field.
 3. Wrong password → friendly message, no raw server string.
 4. **Fill demo credentials** → back to checkout, cart intact.
-5. Point at `docs/auth.md`: “Token in localStorage, XSS trade-off documented.”
+5. Bug lab → **Session → 401 at checkout**, then place the order. “One 401 clears the session in one
+   place; the guard sends me back to sign-in with `?next=` and the cart is untouched.”
+6. Point at `docs/auth.md`: “Token in localStorage, XSS trade-off documented.”
 
 ## 6:30 — The 409 and the retry (2 min)
 
@@ -52,12 +55,12 @@ API contract; every choice on top of it is in `docs/decisions.md`.”
 
 ## 8:30 — Quality evidence (1 min)
 
-- `npm test` → 78 tests. “Cart math, hooks, contract, login, filtering, checkout 409 and duplicate
-  prevention.”
+- `npm test` → 96 tests. “Cart math, hooks, contract, paging, login, filtering, checkout 409 and
+  duplicate prevention.”
 - `.github/workflows/ci.yml` → lint, typecheck, test, build; a failing test fails the required check.
 - Lighthouse: 100 accessibility on home, cart, login (`docs/accessibility.md`).
-- `docs/performance.md`: 5,246 ms → 921 ms to first cards, 95,152 → 517 DOM nodes, measured with
-  `scripts/measure.mjs`.
+- `docs/performance.md`: payload 745,699 B → 3,625 B, page height 5.3M → 27k px, and the 96/page
+  virtualized path measured with `scripts/measure.mjs`.
 
 ## 9:30 — Hard bug and trade-off (30 s each)
 

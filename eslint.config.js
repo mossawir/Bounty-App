@@ -5,7 +5,9 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules', '.shots'] },
+  // 'Bounty App' is an unrelated copy of this repo that sometimes appears in the
+  // workspace; it has its own tsconfig and must not be linted by this project.
+  { ignores: ['dist', 'coverage', 'node_modules', '.shots', 'Bounty App'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommendedTypeChecked],
     files: ['**/*.{ts,tsx}'],

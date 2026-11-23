@@ -45,9 +45,11 @@ export function ProductGrid({ products, onAdd }: ProductGridProps) {
 
     const measure = (): void => {
       const width = element.clientWidth;
+      // Two columns on phones, up to five on a wide desktop.
+      const minCardWidth = width < 560 ? 150 : MIN_CARD_WIDTH;
       const next = Math.max(
         1,
-        Math.min(MAX_COLUMNS, Math.floor((width + GAP) / (MIN_CARD_WIDTH + GAP))),
+        Math.min(MAX_COLUMNS, Math.floor((width + GAP) / (minCardWidth + GAP))),
       );
       setColumns((current) => (current === next ? current : next));
       const offset = element.getBoundingClientRect().top + window.scrollY;

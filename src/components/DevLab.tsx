@@ -46,6 +46,9 @@ export function DevLab() {
           <button type="button" onClick={() => failNext('login', 401)}>
             Login → 401
           </button>
+          <button type="button" onClick={() => failNext('orders', 401)}>
+            Session → 401 at checkout
+          </button>
           <button type="button" onClick={() => failNext('orders', 500)}>
             Checkout → 500
           </button>
@@ -114,8 +117,10 @@ export function DevLab() {
           </button>
           <p className="bug-lab-note">
             To see the 409: add an item, open checkout, press “Sell out cart item → 409”, then place
-            the order. To see idempotency hold: enable “500 after commit”, place an order, then retry —
-            the retry returns the same order id.
+            the order. To see the session expire: press “Session → 401 at checkout” and place an
+            order — you are sent back to sign-in with your cart and the return path intact. To see
+            idempotency hold: enable “500 after commit”, place an order, then retry — the retry
+            returns the same order id.
           </p>
         </div>
       ) : null}
