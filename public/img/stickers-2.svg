@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Sticker pack illustration">
+  <rect width="400" height="400" fill="#dce9c9"/>
+  <circle cx="200" cy="200" r="138" fill="#4f8a5b" opacity="0.3"/>
+  <path d="M200 62c42 0 54 26 82 36s56 34 44 70 12 48-6 78-46 26-74 42-46 30-80 16-30-42-52-62-30-50-14-80 26-42 46-62 24-38 54-38z" fill="#fffbf3" stroke="#191512" stroke-width="6" stroke-linejoin="round"/>
+  <g stroke="#191512" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M172 148c-14-26-4-38 4-46M232 148c14-26 4-38-4-46"/>
+    <ellipse cx="202" cy="222" rx="46" ry="58" fill="#4f8a5b"/>
+    <path d="M158 196l-34-18M158 222h-38M158 248l-34 18M246 196l34-18M246 222h38M246 248l34 18"/>
+  </g>
+  <circle cx="187" cy="206" r="6" fill="#191512"/>
+  <circle cx="217" cy="206" r="6" fill="#191512"/>
+</svg>

@@ -1,0 +1,18 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Mechanical keyboard illustration">
+  <rect width="400" height="400" fill="#d3e2e4"/>
+  <circle cx="200" cy="205" r="136" fill="#c8552b" opacity="0.22"/>
+  <rect x="38" y="140" width="324" height="164" rx="20" fill="#20363d" stroke="#191512" stroke-width="6"/>
+  <g fill="#f8f2e6" stroke="#191512" stroke-width="3">
+    <rect x="60" y="162" width="42" height="34" rx="7"/><rect x="110" y="162" width="42" height="34" rx="7"/>
+    <rect x="160" y="162" width="42" height="34" rx="7"/><rect x="210" y="162" width="42" height="34" rx="7"/>
+    <rect x="260" y="162" width="42" height="34" rx="7"/><rect x="310" y="162" width="32" height="34" rx="7"/>
+    <rect x="60" y="204" width="52" height="34" rx="7"/><rect x="120" y="204" width="42" height="34" rx="7"/>
+    <rect x="170" y="204" width="42" height="34" rx="7"/><rect x="220" y="204" width="42" height="34" rx="7"/>
+    <rect x="270" y="204" width="72" height="34" rx="7"/>
+    <rect x="60" y="246" width="72" height="34" rx="7"/><rect x="140" y="246" width="42" height="34" rx="7"/>
+    <rect x="190" y="246" width="42" height="34" rx="7"/><rect x="240" y="246" width="102" height="34" rx="7"/>
+  </g>
+  <rect x="60" y="246" width="72" height="34" rx="7" fill="#c8552b" stroke="#191512" stroke-width="3"/>
+  <rect x="240" y="246" width="102" height="34" rx="7" fill="#c8552b" stroke="#191512" stroke-width="3"/>
+  <path d="M362 190c22 0 30 14 26 34" fill="none" stroke="#191512" stroke-width="6" stroke-linecap="round"/>
+</svg>

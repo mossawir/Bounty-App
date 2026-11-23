@@ -1,0 +1,12 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Rubber duck illustration">
+  <rect width="400" height="400" fill="#f8dfa4"/>
+  <circle cx="206" cy="212" r="132" fill="#ffb84d" opacity="0.35"/>
+  <ellipse cx="186" cy="250" rx="104" ry="70" fill="#ffca5a" stroke="#191512" stroke-width="5"/>
+  <path d="M92 236c-26 4-40 18-38 34 20-2 34-10 44-20z" fill="#ffca5a" stroke="#191512" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="252" cy="172" r="58" fill="#ffca5a" stroke="#191512" stroke-width="5"/>
+  <path d="M300 158c30 2 48 12 46 26-3 16-30 20-52 10z" fill="#ef8f2b" stroke="#191512" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="264" cy="160" r="9" fill="#191512"/>
+  <circle cx="267" cy="157" r="3" fill="#fffbf3"/>
+  <path d="M150 226c22-2 44 10 54 32-26 12-58 6-72-10z" fill="#eaa61c" stroke="#191512" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M118 320h156" stroke="#191512" stroke-width="5" stroke-linecap="round" opacity="0.35"/>
+</svg>

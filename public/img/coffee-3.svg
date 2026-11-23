@@ -1,0 +1,10 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Coffee cup illustration">
+  <rect width="400" height="400" fill="#cbb08f"/>
+  <circle cx="200" cy="200" r="134" fill="#2f5d54" opacity="0.28"/>
+  <ellipse cx="196" cy="318" rx="122" ry="18" fill="#7a5636" opacity="0.55"/>
+  <path d="M96 162h206v76c0 44-36 80-80 80h-46c-44 0-80-36-80-80z" fill="#fbf4e7" stroke="#191512" stroke-width="6"/>
+  <path d="M302 180h16c22 0 38 18 38 40s-16 40-38 40h-18" fill="none" stroke="#191512" stroke-width="6"/>
+  <ellipse cx="199" cy="163" rx="103" ry="20" fill="#4a2c17" stroke="#191512" stroke-width="6"/>
+  <path d="M150 132c-16-22 10-32-2-54M200 128c-16-22 10-32-2-54M250 132c-16-22 10-32-2-54" fill="none" stroke="#191512" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+  <path d="M128 250c18 26 44 40 72 40" fill="none" stroke="#191512" stroke-width="5" stroke-linecap="round" opacity="0.3"/>
+</svg>

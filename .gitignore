@@ -1,0 +1,13 @@
+dist
+dist-ssr
+coverage
+.shots
+node_modules
+*.local
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+pdf_text.txt
